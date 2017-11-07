@@ -1,14 +1,16 @@
 
 //CHECK OUR ELEMENTS FOR NEIGBOUR BEGIN
-const findRow = (elem,step = 3) => Math.ceil(elem/step)
+const findRow = (elem,step = 4) => Math.ceil(elem/step)
 const oneRow = (elem1,elem2,callback = findRow) => callback(elem1)===callback(elem2);
-const findCol = (elem,step = 3)=>elem%step || step;
+const findCol = (elem,step = 4)=>elem%step || step;
 const oneCol = (elem1,elem2,callback=findCol) => callback(elem1)===callback(elem2);
-const detextXelem =(elem,callback=findRow,step=3) =>(elem-step*(callback(elem)-1));
-const detextYelem = (elem,step=3)=>(Math.ceil((elem-3)/3)+1);
+const detextXelem =(elem,callback=findRow,step=4) =>(elem-step*(callback(elem)-1));
+const detextYelem = (elem,step=4)=>(Math.ceil((elem-4)/4)+1);
 const isNeigbour = (cell1,cell2)=> {
 	return 	oneRow(cell1,cell2) ? 
 				Math.abs(detextXelem(cell1)-detextXelem(cell2)) === 1 ?
+	
+
 					true:
 					false 
 				:oneCol(cell1,cell2) ?
@@ -39,13 +41,19 @@ const findIndexElem = (elem,array,callback=isEqualElem)=>{
 }
 //FIND INDEX OF OUR ELEMENT END
 
+const swap = (el1,el2) => ({...el1,id:el2.id});
+
 const swapElem = (array,ind1,ind2) => {
 	const timeArray = [...array];
 	timeArray.push(timeArray[ind1]);
-	timeArray[ind1] = timeArray[ind2];
-	timeArray[ind2] = timeArray[timeArray.length-1];
+	timeArray[ind1] = {...timeArray[ind1],id: timeArray[ind2].id};
+	timeArray[ind2] = {...timeArray[ind2],id: timeArray[timeArray.length-1].id};
 	timeArray.pop();
 	return timeArray;
+	// array.push(array[ind1]);
+	// array[ind1] = array[ind2];
+	// array[ind2] = array[array[array.length-1]];
+	// array.pop();
 }
 
 class Elem {
@@ -57,6 +65,10 @@ class Elem {
 		this.id = id;
 	}
 }
+
+//XOR OPERATOR
+const toBit = elem => isNaN(elem/elem) ? 0 : 1;
+const XOR = (elem1,elem2,callback = toBit) => callback(elem1)^callback(elem2)?true:false;
 
 //DRAW PART BEGIN
 const drawBoard = (ctx,width,height,step = 50)=>{
@@ -87,9 +99,15 @@ const drawContext =(ctx,arr,callback=drawElem)=>{
 	arr.forEach( item =>{callback(ctx,item)})
 }
 //DRAW PART END
-const draw = (ctx,array)=>{
-	drawBoard(ctx);
+const draw = (ctx,array,width,height)=>{
+	ctx.clearRect(0,0,width,height);
+	drawBorder(ctx,width,height);
+	drawBoard(ctx,width,height);
 	drawContext(ctx,array);
+}
+const drawBorder = (ctx,width,height) =>{
+		ctx.lineWidth = 1;
+		ctx.strokeRect(0,0,width,height);
 }
 const drawCheckedElem = (element,ctx)=> {
 	ctx.beginPath()
@@ -99,9 +117,13 @@ const drawCheckedElem = (element,ctx)=> {
 const calCulate = ()=>{
 
 }
+
+
+//OUR GAME
+
 (function(){
 	const w =50,h=50,step =10;
-	const gameField = [
+	let gameField = [
 		new Elem(0,	 0,  4),
 		new Elem(50, 0,  6),
 		new Elem(100,0,  3),
@@ -118,32 +140,69 @@ const calCulate = ()=>{
 		new Elem(50, 150,13),
 		new Elem(100,150,8),
 		new Elem(150,150,15)
-		]
-
+		];
 	const canvas = document.getElementById('canvas');
 	const ctx = canvas.getContext('2d');
-	let width = canvas.width = 200,
-	height = canvas.height = 200;
-	const handleFunc = event =>{
-		event.preventDefault();
-		canvas.addEventListener('click',(event)=>{event.preventDefault();alert("ddd");return;})
-		calCulate();
-		draw(ctx,gameField);
-		// alert(findIndexElem(findMouseCoords(event),gameField));
-		return;
-	}
+	let width = canvas.width = 200,height = canvas.height = 200,swapArray = [],indexArray=[],checkElem,winFlag=false;
+
 	ctx.beginPath();
+	ctx.clearRect(0,0,width,height);
 	ctx.lineWidth = 1;
 	ctx.strokeRect(0,0,200,200)
-	console.log(gameField)
 	drawBoard(ctx,width,height);
-	// 	ctx.beginPath();
-	// ctx.lineWidth = 3;
-	// ctx.rect(50,0,50,50);
-	// ctx.stroke()
-	drawContext(ctx,gameField)
+	drawContext(ctx,gameField);
+	
+	// drawContext(ctx,gameField);
+
+
+	const drawPole = ()=>{
+		ctx.clearRect(0,0,width,height);
+		ctx.beginPath();
+		ctx.lineWidth = 1;
+		ctx.strokeRect(0,0,200,200);	
+		drawBoard(ctx,width,height);
+		drawContext(ctx,gameField);
+		// ctx.beginPath();
+
+	}
+	const handleFunc = event =>{
+		if(winFlag) return;
+		event.preventDefault();
+
+		let checkCoords = findMouseCoords(event);
+		let index = findIndexElem(checkCoords,gameField)-1;
+		checkElem = gameField[index];
+		swapArray.push(checkElem);
+		indexArray.push(gameField.indexOf(checkElem));
+		// drawCheckedElem(checkElem,ctx);	
+		console.log(swapArray);
+		console.log(indexArray);
+
+	// alert(findIndexElem(checkElem,gameField))
+		// swapArray =  swapArray.length<2?swapArray.push()
+		if(swapArray.length == 2){
+			if(XOR(swapArray[0].id,swapArray[1].id)){
+				if(isNeigbour(indexArray[0]+1,indexArray[1]+1)){
+					gameField = swapElem(gameField,indexArray[0],indexArray[1]);	
+				}
+				
+			}
+			// alert()
+			swapArray = [];
+			indexArray = [];
+		}
+				console.log(gameField);
+
+		drawPole();
+		// ctx.clearRect(0,0,width,height);
+		// drawBoard(ctx,width,height);
+		// drawContext(ctx,gameField);
+		// ctx.lineWidth = 1;
+		// ctx.strokeRect(0,0,200,200);
+
+		if(swapArray.length===1) drawCheckedElem(checkElem,ctx);	
+	}
 	canvas.addEventListener('click',handleFunc);
-	drawCheckedElem(gameField[3],ctx);
 })()
 
 
