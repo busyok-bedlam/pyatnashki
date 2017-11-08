@@ -98,6 +98,21 @@ var XOR = function XOR(elem1, elem2) {
 	var callback = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : toBit;
 	return callback(elem1) ^ callback(elem2) ? true : false;
 };
+var toNum = function toNum(elem) {
+	return typeof elem === "number" ? elem : 0;
+};
+//EQUAL ARRAY
+var isEqualArray = function isEqualArray(array1, array2) {
+	if (array1.length === array2.length) {
+		var list = [];
+		for (var i = 0; i < array1.length; i++) {
+			list.push(array1[i] === array2[i] ? true : false);
+		}var result = list.reduce(function (res, cur) {
+			return res && cur;
+		});
+		return result;
+	}
+};
 
 //DRAW PART BEGIN
 var drawBoard = function drawBoard(ctx, width, height) {
@@ -159,7 +174,7 @@ var calCulate = function calCulate() {};
 	var w = 50,
 	    h = 50,
 	    step = 10;
-	var gameField = [new Elem(0, 0, 4), new Elem(50, 0, 6), new Elem(100, 0, 3), new Elem(150, 0, 7), new Elem(0, 50, ""), new Elem(50, 50, 1), new Elem(100, 50, 14), new Elem(150, 50, 12), new Elem(0, 100, 9), new Elem(50, 100, 2), new Elem(100, 100, 11), new Elem(150, 100, 5), new Elem(0, 150, 10), new Elem(50, 150, 13), new Elem(100, 150, 8), new Elem(150, 150, 15)];
+	var gameField = [new Elem(0, 0, 1), new Elem(50, 0, 2), new Elem(100, 0, 3), new Elem(150, 0, 4), new Elem(0, 50, 5), new Elem(50, 50, 6), new Elem(100, 50, 7), new Elem(150, 50, 8), new Elem(0, 100, 9), new Elem(50, 100, 10), new Elem(100, 100, 11), new Elem(150, 100, 12), new Elem(0, 150, 13), new Elem(50, 150, 14), new Elem(100, 150, ""), new Elem(150, 150, 15)];
 	var canvas = document.getElementById('canvas');
 	var ctx = canvas.getContext('2d');
 	var width = canvas.width = 200,
@@ -167,6 +182,8 @@ var calCulate = function calCulate() {};
 	    swapArray = [],
 	    indexArray = [],
 	    checkElem = void 0,
+	    winArray = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0],
+	    currentArray = void 0,
 	    winFlag = false;
 
 	ctx.beginPath();
@@ -197,24 +214,26 @@ var calCulate = function calCulate() {};
 		checkElem = gameField[index];
 		swapArray.push(checkElem);
 		indexArray.push(gameField.indexOf(checkElem));
+		currentArray = gameField.map(function (item) {
+			return toNum(item.id);
+		});
+		console.log(currentArray);
 		// drawCheckedElem(checkElem,ctx);	
 		console.log(swapArray);
 		console.log(indexArray);
 
-		// alert(findIndexElem(checkElem,gameField))
-		// swapArray =  swapArray.length<2?swapArray.push()
+		//SWAP CONDITION
 		if (swapArray.length == 2) {
 			if (XOR(swapArray[0].id, swapArray[1].id)) {
 				if (isNeigbour(indexArray[0] + 1, indexArray[1] + 1)) {
 					gameField = swapElem(gameField, indexArray[0], indexArray[1]);
 				}
 			}
-			// alert()
 			swapArray = [];
 			indexArray = [];
 		}
 		console.log(gameField);
-
+		if (isEqualArray(winArray, currentArray)) winFlag = true;
 		drawPole();
 		// ctx.clearRect(0,0,width,height);
 		// drawBoard(ctx,width,height);
@@ -222,7 +241,7 @@ var calCulate = function calCulate() {};
 		// ctx.lineWidth = 1;
 		// ctx.strokeRect(0,0,200,200);
 
-		if (swapArray.length === 1) drawCheckedElem(checkElem, ctx);
+		if (swapArray.length === 1 && winFlag === false) drawCheckedElem(checkElem, ctx);
 	};
 	canvas.addEventListener('click', handleFunc);
 })();
